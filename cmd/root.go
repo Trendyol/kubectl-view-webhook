@@ -17,15 +17,15 @@ limitations under the License.
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
+	"github.com/Trendyol/kubectl-view-webhook/pkg/k8s"
+	"github.com/Trendyol/kubectl-view-webhook/pkg/printer"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd/api"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -115,24 +115,24 @@ func (o *ViewWebhookOptions) Validate() error {
 // Run lists all available webhooks on a user's KUBECONFIG or updates the
 // current context based on a provided namespace.
 func (o *ViewWebhookOptions) Run() error {
-	ctx := context.TODO()
-	// create the ClientSet
-	clientset, err := kubernetes.NewForConfig(o.restConfig)
+	printer := printer.NewPrinter(o.Out)
+
+	// create the ClientSet from restConfig
+	clientSet, err := kubernetes.NewForConfig(o.restConfig)
 	if err != nil {
 		return err
 	}
 
-	mutatingWebhookClient := clientset.AdmissionregistrationV1beta1().MutatingWebhookConfigurations()
 	//validatingWebhookClient := clientset.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations()
 
-	mutatingWebhookConfigurationList, err := mutatingWebhookClient.List(ctx, metaV1.ListOptions{})
+	mw := k8s.NewMutatingWebHookClient(clientSet)
+	model, err := mw.Run()
+
 	if err != nil {
 		return err
 	}
 
-	for _, mwc := range mutatingWebhookConfigurationList.Items {
-		fmt.Printf("Mutating webhook name: %s \n", mwc.Name)
-	}
+	printer.Print(model)
 
 	return nil
 }
