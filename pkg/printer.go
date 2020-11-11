@@ -17,22 +17,22 @@ limitations under the License.
 package pkg
 
 import (
-	"github.com/pterm/pterm"
 	"github.com/olekukonko/tablewriter"
+	"github.com/pterm/pterm"
 	"io"
 	"os"
 )
 
 // Printer formats and prints check results and warnings.
 type Printer struct {
-	out  io.Writer
+	out io.Writer
 }
 
 // NewPrinter constructs a new Printer with the specified output io.Writer
 // and output format.
 func NewPrinter(out io.Writer) *Printer {
 	return &Printer{
-		out:  out,
+		out: out,
 	}
 }
 

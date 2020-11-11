@@ -13,15 +13,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package main
 
 import (
-	"github.com/Trendyol/kubectl-view-webhook/cmd"
+	"github.com/Trendyol/kubectl-view-webhook/pkg/cmd"
 	"github.com/spf13/pflag"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"os"
 )
 
 func main() {
 	flags := pflag.NewFlagSet("kubectl-view-webhook", pflag.ExitOnError)
 	pflag.CommandLine = flags
-	cmd.Execute()
+
+	root := cmd.NewCmdViewWebhook(genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr})
+	if err := root.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
