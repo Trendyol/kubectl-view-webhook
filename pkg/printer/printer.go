@@ -64,10 +64,12 @@ func (p *Printer) Print(model *PrintModel) {
 	//pterm.NewRGB(178, 44, 199).Println("This text is printed with a custom RGB!")
 
 	var data [][]string
+	headers := []string{"Kind", "Name", "WebhookName", "Resources", "Operations", "Remaining Day", "Active Namespaces"}
 
 	for _, item := range model.Items {
 		operationsData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.Operations)).Srender()
 		resourcesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.Resources)).Srender()
+		namespacesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.ActiveNamespaces)).Srender()
 
 		var valid string
 		if item.ValidUntil < 4000 {
@@ -78,11 +80,12 @@ func (p *Printer) Print(model *PrintModel) {
 			valid = pterm.Green(strconv.FormatInt(item.ValidUntil, 10) + "d")
 		}
 
-		data = append(data, []string{item.Kind, item.Name,item.WebhookName, resourcesData, operationsData, valid})
+		items := []string{item.Kind, item.Name, item.WebhookName, resourcesData, operationsData, valid, namespacesData}
+		data = append(data, items)
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Kind", "Name", "WebhookName","Resources", "Operations", "Remaining Day"})
+	table.SetHeader(headers)
 	table.SetAutoWrapText(false)
 	table.SetRowLine(true)
 	table.AppendBulk(data)

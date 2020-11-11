@@ -27,4 +27,5 @@ type PrintItem struct {
 	Operations  []string
 	Resources   []string
 	ValidUntil  int64
+	ActiveNamespaces []string
 }
