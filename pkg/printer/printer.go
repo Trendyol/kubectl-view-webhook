@@ -80,19 +80,21 @@ func (p *Printer) Print(model *PrintModel) {
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Kind", "Name", "WebhookName", "Resources", "Operations", "Remaining Day", "Active Namespaces"})
+	table.SetHeader([]string{"Kind", "Name", "Webhook", "Resources", "Operations", "Remaining Day", "Active NS"})
 	table.SetRowLine(false)
 	table.SetAutoMergeCells(true)
-	table.SetReflowDuringAutoWrap(false)
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
 	table.SetHeaderLine(false)
 	table.SetBorder(false)
-	table.SetTablePadding(" ")
-	table.SetNoWhiteSpace(false)
+
+	//table.SetReflowDuringAutoWrap(true)
+	table.SetAutoWrapText(false)
+	table.SetAutoFormatHeaders(true)
+	//table.SetCenterSeparator("")
+	//table.SetColumnSeparator("")
+	//table.SetRowSeparator("")
+
+	//table.SetTablePadding(" ")
+	//table.SetNoWhiteSpace(true)
 	table.AppendBulk(data)
 
 	table.Render()

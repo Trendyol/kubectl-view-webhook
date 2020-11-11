@@ -22,7 +22,6 @@ import (
 	"encoding/pem"
 	"github.com/Trendyol/kubectl-view-webhook/pkg/printer"
 	"k8s.io/api/admissionregistration/v1beta1"
-	"k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"log"
@@ -46,10 +45,7 @@ func NewMutatingWebHookClient(client *kubernetes.Clientset) *MutatingWebHookClie
 func (w *MutatingWebHookClient) Run(args []string) (*printer.PrintModel, error) {
 	c := w.client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations()
 	var items []printer.PrintItem
-	ncList, err := w.client.CoreV1().Namespaces().List(w.context, metaV1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
+
 	if len(args) == 1 {
 		mutatingWebhookConfigurationList, err := c.List(w.context, metaV1.ListOptions{})
 		if err != nil {
@@ -57,7 +53,7 @@ func (w *MutatingWebHookClient) Run(args []string) (*printer.PrintModel, error) 
 		}
 
 		for _, mwc := range mutatingWebhookConfigurationList.Items {
-			items = w.fillPrintItems(mwc, items, ncList)
+			items = w.fillPrintItems(mwc, items)
 		}
 	} else {
 		mutatingWebhookConfiguration, err := c.Get(w.context, args[1], metaV1.GetOptions{})
@@ -65,7 +61,7 @@ func (w *MutatingWebHookClient) Run(args []string) (*printer.PrintModel, error) 
 			return nil, err
 		}
 
-		items = w.fillPrintItems(*mutatingWebhookConfiguration, items, ncList)
+		items = w.fillPrintItems(*mutatingWebhookConfiguration, items)
 	}
 
 	return &printer.PrintModel{
@@ -73,7 +69,7 @@ func (w *MutatingWebHookClient) Run(args []string) (*printer.PrintModel, error) 
 	}, nil
 }
 
-func (w *MutatingWebHookClient) fillPrintItems(mwc v1beta1.MutatingWebhookConfiguration, items []printer.PrintItem, ncList *v1.NamespaceList) []printer.PrintItem {
+func (w *MutatingWebHookClient) fillPrintItems(mwc v1beta1.MutatingWebhookConfiguration, items []printer.PrintItem) []printer.PrintItem {
 	item := printer.PrintItem{
 		Kind: "Mutating",
 		Name: mwc.Name, //TODO: typeMeta nil
@@ -82,15 +78,19 @@ func (w *MutatingWebHookClient) fillPrintItems(mwc v1beta1.MutatingWebhookConfig
 		var operations, resources, activeNamespaces []string
 
 		if webhook.NamespaceSelector != nil {
-			for _, ns := range ncList.Items {
-				available := false
-				for k, v := range webhook.NamespaceSelector.MatchLabels {
-					if ns.Labels[k] == v {
-						available = true
+			ncList, _ := w.client.CoreV1().Namespaces().List(w.context, metaV1.ListOptions{})
+
+			if ncList != nil {
+				for _, ns := range ncList.Items {
+					available := false
+					for k, v := range webhook.NamespaceSelector.MatchLabels {
+						if ns.Labels[k] == v {
+							available = true
+						}
 					}
-				}
-				if available {
-					activeNamespaces = append(activeNamespaces, ns.Name)
+					if available {
+						activeNamespaces = append(activeNamespaces, ns.Name)
+					}
 				}
 			}
 		}
