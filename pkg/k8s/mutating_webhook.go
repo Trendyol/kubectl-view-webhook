@@ -102,6 +102,5 @@ func retrieveValidDateCount(certificate []byte) int64 {
 	if err != nil {
 		log.Fatalf("x509.ParseCertificate - error occurred, detail: %v", err)
 	}
-	log.Println("Certificate signing request, status: Checking NotAfter date")
 	return int64(cert.NotAfter.Sub(time.Now()).Hours() / 24)
 }
