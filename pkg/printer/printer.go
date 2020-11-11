@@ -67,24 +67,23 @@ func (p *Printer) Print(model *PrintModel) {
 		}
 
 		webhookTreeList := pterm.NewTreeFromLeveledList(pterm.LeveledList{
-			pterm.LeveledListItem{Level: 0, Text: item.Webhook.Name},
-			pterm.LeveledListItem{Level: 1, Text: item.Webhook.ServiceName},
-			pterm.LeveledListItem{Level: 2, Text: "NS  : " + item.Webhook.ServiceNamespace},
-			pterm.LeveledListItem{Level: 2, Text: "Path: " + *item.Webhook.ServicePath},
-			pterm.LeveledListItem{Level: 2, Text: "Port: " + strconv.Itoa(int(*item.Webhook.ServicePort))},
+			pterm.LeveledListItem{Level: 0, Text: item.Webhook.ServiceName},
+			pterm.LeveledListItem{Level: 1, Text: "NS  : " + item.Webhook.ServiceNamespace},
+			pterm.LeveledListItem{Level: 1, Text: "Path: " + *item.Webhook.ServicePath},
+			pterm.LeveledListItem{Level: 1, Text: "Port: " + strconv.Itoa(int(*item.Webhook.ServicePort))},
 		})
 
 		s, _ := pterm.DefaultTree.WithRoot(webhookTreeList).Srender()
 
-		data = append(data, []string{item.Kind, item.Name, strings.TrimSuffix(s, "\n"), resourcesData, operationsData, valid, namespacesData})
+		data = append(data, []string{item.Kind, item.Name, item.Webhook.Name, strings.TrimSuffix(s, "\n"), resourcesData, operationsData, valid, namespacesData})
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Kind", "Name", "Webhook", "Resources", "Operations", "Remaining Day", "Active NS"})
-	table.SetRowLine(false)
+	table.SetHeader([]string{"Kind", "Name", "Webhook", "Service", "Resources", "Operations", "Remaining Day", "Active NS"})
+	table.SetRowLine(true)
 	table.SetAutoMergeCells(true)
-	table.SetHeaderLine(false)
-	table.SetBorder(false)
+	table.SetHeaderLine(true)
+	table.SetBorder(true)
 
 	//table.SetReflowDuringAutoWrap(true)
 	table.SetAutoWrapText(false)
