@@ -17,22 +17,27 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd/api"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
-	errNoKubeconfig = errors.New(fmt.Sprintf("no kubeconfig provided"))
+	errNoKubeConfig = errors.New(fmt.Sprintf("no kubeconfig provided"))
 )
 
 type ViewWebhookOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 
-	rawConfig    api.Config
-	args         []string
+	restConfig *rest.Config
+	rawConfig  api.Config
+	args       []string
 
 	genericclioptions.IOStreams
 }
@@ -63,11 +68,10 @@ func NewCmdViewWebhook(streams genericclioptions.IOStreams) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("kubeconfig %s", o.rawConfig.CurrentContext)
-
 			if err := o.Validate(); err != nil {
 				return err
 			}
+
 			if err := o.Run(); err != nil {
 				return err
 			}
@@ -81,11 +85,16 @@ func NewCmdViewWebhook(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-// Complete sets all information required for updating the current context
+// Complete sets all information required for viewing webhook
 func (o *ViewWebhookOptions) Complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 
 	var err error
+	o.restConfig, err = o.configFlags.ToRESTConfig()
+	if err != nil {
+		return err
+	}
+
 	o.rawConfig, err = o.configFlags.ToRawKubeConfigLoader().RawConfig()
 	if err != nil {
 		return err
@@ -97,7 +106,7 @@ func (o *ViewWebhookOptions) Complete(cmd *cobra.Command, args []string) error {
 // Validate ensures that all required args and flags are provided
 func (o *ViewWebhookOptions) Validate() error {
 	if len(o.rawConfig.CurrentContext) == 0 {
-		return errNoKubeconfig
+		return errNoKubeConfig
 	}
 
 	return nil
@@ -106,6 +115,24 @@ func (o *ViewWebhookOptions) Validate() error {
 // Run lists all available webhooks on a user's KUBECONFIG or updates the
 // current context based on a provided namespace.
 func (o *ViewWebhookOptions) Run() error {
+	ctx := context.TODO()
+	// create the ClientSet
+	clientset, err := kubernetes.NewForConfig(o.restConfig)
+	if err != nil {
+		return err
+	}
+
+	mutatingWebhookClient := clientset.AdmissionregistrationV1beta1().MutatingWebhookConfigurations()
+	//validatingWebhookClient := clientset.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations()
+
+	mutatingWebhookConfigurationList, err := mutatingWebhookClient.List(ctx, metaV1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, mwc := range mutatingWebhookConfigurationList.Items {
+		fmt.Printf("Mutating webhook name: %s \n", mwc.Name)
+	}
 
 	return nil
 }
