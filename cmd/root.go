@@ -22,23 +22,14 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/tools/clientcmd/api"
-	"strings"
 )
 
 var (
-	errNoContext = errors.New(fmt.Sprintf("no context provided, use '%q' to select", "kubectl config use-context <context>"))
+	errNoKubeconfig = errors.New(fmt.Sprintf("no kubeconfig provided"))
 )
 
 type ViewWebhookOptions struct {
 	configFlags *genericclioptions.ConfigFlags
-
-	resultingContext     *api.Context
-	resultingContextName string
-
-	userSpecifiedCluster   string
-	userSpecifiedContext   string
-	userSpecifiedAuthInfo  string
-	userSpecifiedNamespace string
 
 	rawConfig    api.Config
 	args         []string
@@ -71,6 +62,9 @@ func NewCmdViewWebhook(streams genericclioptions.IOStreams) *cobra.Command {
 			if err := o.Complete(c, args); err != nil {
 				return err
 			}
+
+			fmt.Printf("kubeconfig %s", o.rawConfig.CurrentContext)
+
 			if err := o.Validate(); err != nil {
 				return err
 			}
@@ -97,93 +91,13 @@ func (o *ViewWebhookOptions) Complete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	o.userSpecifiedNamespace, err = cmd.Flags().GetString("namespace")
-	if err != nil {
-		return err
-	}
-	if len(args) > 0 {
-		if len(o.userSpecifiedNamespace) > 0 {
-			return fmt.Errorf("cannot specify both a --namespace value and a new namespace argument")
-		}
-
-		o.userSpecifiedNamespace = args[0]
-	}
-
-	// if no namespace argument or flag value was specified, then there
-	// is no need to generate a resulting context
-	if len(o.userSpecifiedNamespace) == 0 {
-		return nil
-	}
-
-	o.userSpecifiedContext, err = cmd.Flags().GetString("context")
-	if err != nil {
-		return err
-	}
-
-	o.userSpecifiedCluster, err = cmd.Flags().GetString("cluster")
-	if err != nil {
-		return err
-	}
-
-	o.userSpecifiedAuthInfo, err = cmd.Flags().GetString("user")
-	if err != nil {
-		return err
-	}
-
-	currentContext, exists := o.rawConfig.Contexts[o.rawConfig.CurrentContext]
-	if !exists {
-		return errNoContext
-	}
-
-	o.resultingContext = api.NewContext()
-	o.resultingContext.Cluster = currentContext.Cluster
-	o.resultingContext.AuthInfo = currentContext.AuthInfo
-
-	// if a target context is explicitly provided by the user,
-	// use that as our reference for the final, resulting context
-	if len(o.userSpecifiedContext) > 0 {
-		o.resultingContextName = o.userSpecifiedContext
-		if userCtx, exists := o.rawConfig.Contexts[o.userSpecifiedContext]; exists {
-			o.resultingContext = userCtx.DeepCopy()
-		}
-	}
-
-	// override context info with user provided values
-	o.resultingContext.Namespace = o.userSpecifiedNamespace
-
-	if len(o.userSpecifiedCluster) > 0 {
-		o.resultingContext.Cluster = o.userSpecifiedCluster
-	}
-	if len(o.userSpecifiedAuthInfo) > 0 {
-		o.resultingContext.AuthInfo = o.userSpecifiedAuthInfo
-	}
-
-	// generate a unique context name based on its new values if
-	// user did not explicitly request a context by name
-	if len(o.userSpecifiedContext) == 0 {
-		o.resultingContextName = generateContextName(o.resultingContext)
-	}
-
 	return nil
-}
-
-func generateContextName(fromContext *api.Context) string {
-	name := fromContext.Namespace
-	if len(fromContext.Cluster) > 0 {
-		name = fmt.Sprintf("%s/%s", name, fromContext.Cluster)
-	}
-	if len(fromContext.AuthInfo) > 0 {
-		cleanAuthInfo := strings.Split(fromContext.AuthInfo, "/")[0]
-		name = fmt.Sprintf("%s/%s", name, cleanAuthInfo)
-	}
-
-	return name
 }
 
 // Validate ensures that all required args and flags are provided
 func (o *ViewWebhookOptions) Validate() error {
 	if len(o.rawConfig.CurrentContext) == 0 {
-		return errNoContext
+		return errNoKubeconfig
 	}
 
 	return nil

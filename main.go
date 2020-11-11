@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/Trendyol/kubectl-view-webhook/pkg/cmd"
+	"github.com/Trendyol/kubectl-view-webhook/cmd"
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"os"
