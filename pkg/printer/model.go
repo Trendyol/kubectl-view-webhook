@@ -21,11 +21,19 @@ type PrintModel struct {
 }
 
 type PrintItem struct {
-	Name        string
-	WebhookName string
-	Kind        string
-	Operations  []string
-	Resources   []string
-	ValidUntil  int64
+	Name       string
+	Webhook    PrintWebhookItem
+	Kind       string
+	Operations []string
+	Resources  []string
+	ValidUntil int64
 	ActiveNamespaces []string
+}
+
+type PrintWebhookItem struct {
+	Name             string
+	ServiceName      string
+	ServiceNamespace string
+	ServicePath      *string
+	ServicePort      *int32
 }

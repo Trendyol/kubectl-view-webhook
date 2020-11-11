@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // Printer formats and prints check results and warnings.
@@ -49,22 +50,7 @@ func convertStringArrayToBulletListItem(s []string) []pterm.BulletListItem {
 }
 
 func (p *Printer) Print(model *PrintModel) {
-	//leveledList := pterm.LeveledList{
-	//	pterm.LeveledListItem{Level: 0, Text: "Foo"},
-	//	pterm.LeveledListItem{Level: 1, Text: "Bar"},
-	//	pterm.LeveledListItem{Level: 1, Text: "Baz"},
-	//}
-	//
-	//// Generate tree from LeveledList.
-	//root := pterm.NewTreeFromLeveledList(leveledList)
-	//
-	//// Render TreePrinter
-	//s, _ := pterm.DefaultTree.WithRoot(root).Srender()
-
-	//pterm.NewRGB(178, 44, 199).Println("This text is printed with a custom RGB!")
-
 	var data [][]string
-	headers := []string{"Kind", "Name", "WebhookName", "Resources", "Operations", "Remaining Day", "Active Namespaces"}
 
 	for _, item := range model.Items {
 		operationsData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.Operations)).Srender()
@@ -80,16 +66,34 @@ func (p *Printer) Print(model *PrintModel) {
 			valid = pterm.Green(strconv.FormatInt(item.ValidUntil, 10) + "d")
 		}
 
-		items := []string{item.Kind, item.Name, item.WebhookName, resourcesData, operationsData, valid, namespacesData}
-		data = append(data, items)
+		webhookTreeList := pterm.NewTreeFromLeveledList(pterm.LeveledList{
+			pterm.LeveledListItem{Level: 0, Text: item.Webhook.Name},
+			pterm.LeveledListItem{Level: 1, Text: item.Webhook.ServiceName},
+			pterm.LeveledListItem{Level: 2, Text: "NS  : " + item.Webhook.ServiceNamespace},
+			pterm.LeveledListItem{Level: 2, Text: "Path: " + *item.Webhook.ServicePath},
+			pterm.LeveledListItem{Level: 2, Text: "Port: " + strconv.Itoa(int(*item.Webhook.ServicePort))},
+		})
+
+		s, _ := pterm.DefaultTree.WithRoot(webhookTreeList).Srender()
+
+		data = append(data, []string{item.Kind, item.Name, strings.TrimSuffix(s, "\n"), resourcesData, operationsData, valid, namespacesData})
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader(headers)
-	table.SetAutoWrapText(false)
-	table.SetRowLine(true)
-	table.AppendBulk(data)
+	table.SetHeader([]string{"Kind", "Name", "WebhookName", "Resources", "Operations", "Remaining Day", "Active Namespaces"})
+	table.SetRowLine(false)
 	table.SetAutoMergeCells(true)
-	table.Render()
+	table.SetReflowDuringAutoWrap(false)
+	table.SetAutoWrapText(false)
+	table.SetAutoFormatHeaders(true)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetRowSeparator("")
+	table.SetHeaderLine(false)
+	table.SetBorder(false)
+	table.SetTablePadding(" ")
+	table.SetNoWhiteSpace(false)
+	table.AppendBulk(data)
 
+	table.Render()
 }

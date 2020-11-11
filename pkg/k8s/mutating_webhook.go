@@ -75,7 +75,7 @@ func (w *MutatingWebHookClient) Run(args []string) (*printer.PrintModel, error) 
 
 func (w *MutatingWebHookClient) fillPrintItems(mwc v1beta1.MutatingWebhookConfiguration, items []printer.PrintItem, ncList *v1.NamespaceList) []printer.PrintItem {
 	item := printer.PrintItem{
-		Kind: "MutatingWebhookConfiguration",
+		Kind: "Mutating",
 		Name: mwc.Name, //TODO: typeMeta nil
 	}
 	for _, webhook := range mwc.Webhooks {
@@ -95,7 +95,14 @@ func (w *MutatingWebHookClient) fillPrintItems(mwc v1beta1.MutatingWebhookConfig
 			}
 		}
 
-		item.WebhookName = webhook.Name
+		item.Webhook = printer.PrintWebhookItem{
+			Name:             webhook.Name,
+			ServiceName:      webhook.ClientConfig.Service.Name,
+			ServiceNamespace: webhook.ClientConfig.Service.Namespace,
+			ServicePath:      webhook.ClientConfig.Service.Path,
+			ServicePort:      webhook.ClientConfig.Service.Port,
+		}
+
 		for _, rule := range webhook.Rules {
 
 			for _, op := range rule.Operations {
@@ -110,6 +117,7 @@ func (w *MutatingWebHookClient) fillPrintItems(mwc v1beta1.MutatingWebhookConfig
 		item.Operations = operations
 		item.Resources = resources
 		item.ValidUntil = retrieveValidDateCount(webhook.ClientConfig.CABundle)
+		item.ActiveNamespaces = activeNamespaces
 		items = append(items, item)
 	}
 	return items
