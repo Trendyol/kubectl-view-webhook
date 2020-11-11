@@ -22,6 +22,7 @@ type PrintModel struct {
 
 type PrintItem struct {
 	Name        string
+	WebhookName string
 	Kind        string
 	Operations  []string
 	Resources   []string

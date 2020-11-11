@@ -73,9 +73,10 @@ func (w *MutatingWebHookClient) fillPrintItems(mwc v1beta1.MutatingWebhookConfig
 	var operations, resources []string
 	item := printer.PrintItem{
 		Kind: "MutatingWebhookConfiguration",
-		Name: mwc.Name,//TODO: typeMeta nil
+		Name: mwc.Name, //TODO: typeMeta nil
 	}
 	for _, webhook := range mwc.Webhooks {
+		item.WebhookName = webhook.Name
 		for _, rule := range webhook.Rules {
 
 			for _, op := range rule.Operations {

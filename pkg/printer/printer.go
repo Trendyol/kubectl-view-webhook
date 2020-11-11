@@ -78,11 +78,11 @@ func (p *Printer) Print(model *PrintModel) {
 			valid = pterm.Green(strconv.FormatInt(item.ValidUntil, 10) + "d")
 		}
 
-		data = append(data, []string{item.Kind, item.Name, resourcesData, operationsData, valid})
+		data = append(data, []string{item.Kind, item.Name,item.WebhookName, resourcesData, operationsData, valid})
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Kind", "Name", "Resources", "Operations", "Remaining Day"})
+	table.SetHeader([]string{"Kind", "Name", "WebhookName","Resources", "Operations", "Remaining Day"})
 	table.SetAutoWrapText(false)
 	table.SetRowLine(true)
 	table.AppendBulk(data)
