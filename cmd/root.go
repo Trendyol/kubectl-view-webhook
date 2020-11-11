@@ -19,24 +19,28 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"os"
-
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/spf13/viper"
 )
 
-var cfgFile string
+//var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "kubectl-view-webhook",
-	Short: "Visualize your webhook configuration resources",
-	Long: `This projects aims to visualize most important parts of the admission webhook configuration resources.`,
+	Short: "👀 Visualize your webhook configuration resources",
+	Long:  `This projects aims to visualize most important parts of the admission webhook configuration resources.`,
+	RunE: func(c *cobra.Command, args []string) error {
+		return nil
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	configFlags := genericclioptions.NewConfigFlags(true)
+	configFlags.AddFlags(rootCmd.Flags())
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -44,41 +48,44 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	//cobra.OnInitialize(initConfig)
+	//
+	//// Here you will define your flags and configuration settings.
+	//// Cobra supports persistent flags, which, if defined here,
+	//// will be global for your application.
+	//
+	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kubectl-view-webhook.yaml)")
+	//
+	//// Cobra also supports local flags, which will only run
+	//// when this action is called directly.
+	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kubectl-view-webhook.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	//genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".kubectl-view-webhook" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".kubectl-view-webhook")
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
-}
+//
+//// initConfig reads in config file and ENV variables if set.
+//func initConfig() {
+//	if cfgFile != "" {
+//		// Use config file from the flag.
+//		viper.SetConfigFile(cfgFile)
+//	} else {
+//		// Find home directory.
+//		home, err := homedir.Dir()
+//		if err != nil {
+//			fmt.Println(err)
+//			os.Exit(1)
+//		}
+//
+//		// Search config in home directory with name ".kubectl-view-webhook" (without extension).
+//		viper.AddConfigPath(home)
+//		viper.SetConfigName(".kubectl-view-webhook")
+//	}
+//
+//	viper.AutomaticEnv() // read in environment variables that match
+//
+//	// If a config file is found, read it in.
+//	if err := viper.ReadInConfig(); err == nil {
+//		fmt.Println("Using config file:", viper.ConfigFileUsed())
+//	}
+//}

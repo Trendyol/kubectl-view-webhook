@@ -15,8 +15,13 @@ limitations under the License.
 */
 package main
 
-import "github.com/Trendyol/kubectl-view-webhook/cmd"
+import (
+	"github.com/Trendyol/kubectl-view-webhook/cmd"
+	"github.com/spf13/pflag"
+)
 
 func main() {
+	flags := pflag.NewFlagSet("kubectl-view-webhook", pflag.ExitOnError)
+	pflag.CommandLine = flags
 	cmd.Execute()
 }
