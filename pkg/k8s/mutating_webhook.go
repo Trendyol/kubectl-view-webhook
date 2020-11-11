@@ -70,12 +70,12 @@ func (w *MutatingWebHookClient) Run(args []string) (*printer.PrintModel, error) 
 }
 
 func (w *MutatingWebHookClient) fillPrintItems(mwc v1beta1.MutatingWebhookConfiguration, items []printer.PrintItem) []printer.PrintItem {
-	var operations, resources []string
 	item := printer.PrintItem{
 		Kind: "MutatingWebhookConfiguration",
 		Name: mwc.Name, //TODO: typeMeta nil
 	}
 	for _, webhook := range mwc.Webhooks {
+		var operations, resources []string
 		item.WebhookName = webhook.Name
 		for _, rule := range webhook.Rules {
 
