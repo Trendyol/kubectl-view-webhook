@@ -21,6 +21,9 @@ type PrintModel struct {
 }
 
 type PrintItem struct {
-	Name string
-	Kind string
+	Name        string
+	Kind        string
+	Operations  []string
+	Resources   []string
+	ValidUntil  int64
 }

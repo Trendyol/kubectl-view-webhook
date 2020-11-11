@@ -21,6 +21,7 @@ import (
 	"github.com/pterm/pterm"
 	"io"
 	"os"
+	"strconv"
 )
 
 // Printer formats and prints check results and warnings.
@@ -36,33 +37,56 @@ func NewPrinter(out io.Writer) *Printer {
 	}
 }
 
-func (p *Printer) Print(model *PrintModel) {
-	leveledList := pterm.LeveledList{
-		pterm.LeveledListItem{Level: 0, Text: "Foo"},
-		pterm.LeveledListItem{Level: 1, Text: "Bar"},
-		pterm.LeveledListItem{Level: 1, Text: "Baz"},
+func convertStringArrayToBulletListItem(s []string) []pterm.BulletListItem {
+	var bulletItems []pterm.BulletListItem
+	for _, t := range s {
+		bulletItems = append(bulletItems, pterm.BulletListItem{
+			Level: 0,
+			Text:  t,
+		})
 	}
+	return bulletItems
+}
 
-	// Generate tree from LeveledList.
-	root := pterm.NewTreeFromLeveledList(leveledList)
-
-	// Render TreePrinter
-	s, _ := pterm.DefaultTree.WithRoot(root).Srender()
+func (p *Printer) Print(model *PrintModel) {
+	//leveledList := pterm.LeveledList{
+	//	pterm.LeveledListItem{Level: 0, Text: "Foo"},
+	//	pterm.LeveledListItem{Level: 1, Text: "Bar"},
+	//	pterm.LeveledListItem{Level: 1, Text: "Baz"},
+	//}
+	//
+	//// Generate tree from LeveledList.
+	//root := pterm.NewTreeFromLeveledList(leveledList)
+	//
+	//// Render TreePrinter
+	//s, _ := pterm.DefaultTree.WithRoot(root).Srender()
 
 	//pterm.NewRGB(178, 44, 199).Println("This text is printed with a custom RGB!")
 
 	var data [][]string
 
 	for _, item := range model.Items {
-		data = append(data, []string{item.Kind, item.Name, s, "$10.98"})
+		operationsData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.Operations)).Srender()
+		resourcesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.Resources)).Srender()
+
+		var valid string
+		if item.ValidUntil < 4000 {
+			valid = pterm.Red(strconv.FormatInt(item.ValidUntil, 10) + "d")
+		} else if item.ValidUntil < 60000 {
+			valid = pterm.Yellow(strconv.FormatInt(item.ValidUntil, 10) + "d")
+		} else {
+			valid = pterm.Green(strconv.FormatInt(item.ValidUntil, 10) + "d")
+		}
+
+		data = append(data, []string{item.Kind, item.Name, resourcesData, operationsData, valid})
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Kind", "Name", "CV2", "Amount"})
-	//table.SetFooter([]string{"", "", "Total", "$146.93"})
+	table.SetHeader([]string{"Kind", "Name", "Resources", "Operations", "Remaining Day"})
 	table.SetAutoWrapText(false)
 	table.SetRowLine(true)
 	table.AppendBulk(data)
+	table.SetAutoMergeCells(true)
 	table.Render()
 
 }

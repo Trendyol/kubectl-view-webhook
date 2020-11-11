@@ -25,18 +25,17 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd/api"
-)
-
-var (
-	errNoKubeConfig = errors.New(fmt.Sprintf("no kubeconfig provided"))
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+	"os"
+	"path/filepath"
 )
 
 type ViewWebhookOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 
 	restConfig *rest.Config
-	rawConfig  api.Config
+	kubeconfig string
 	args       []string
 
 	genericclioptions.IOStreams
@@ -68,10 +67,6 @@ func NewCmdViewWebhook(streams genericclioptions.IOStreams) *cobra.Command {
 				return err
 			}
 
-			if err := o.Validate(); err != nil {
-				return err
-			}
-
 			if err := o.Run(); err != nil {
 				return err
 			}
@@ -89,33 +84,42 @@ func NewCmdViewWebhook(streams genericclioptions.IOStreams) *cobra.Command {
 func (o *ViewWebhookOptions) Complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 
-	var err error
-	o.restConfig, err = o.configFlags.ToRESTConfig()
+	kubeconfig, err := cmd.Flags().GetString("kubeconfig")
 	if err != nil {
 		return err
 	}
 
-	o.rawConfig, err = o.configFlags.ToRawKubeConfigLoader().RawConfig()
-	if err != nil {
-		return err
+	if kubeconfig == "" {
+		// fallback to kubeconfig
+		kubeconfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
+		if envvar := os.Getenv("KUBECONFIG"); len(envvar) > 0 {
+			kubeconfig = envvar
+		}
 	}
 
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		fmt.Printf("The kubeconfig cannot be loaded: %v\n", err)
+		os.Exit(1)
+	}
+
+	o.restConfig = config
+	o.kubeconfig = kubeconfig
 	return nil
 }
 
 // Validate ensures that all required args and flags are provided
 func (o *ViewWebhookOptions) Validate() error {
-	if len(o.rawConfig.CurrentContext) == 0 {
-		return errNoKubeConfig
+	if len(o.args) > 2 {
+		return errors.New("more than one argument supplied , you can only give one argument for the webhook name")
 	}
-
 	return nil
 }
 
 // Run lists all available webhooks on a user's KUBECONFIG or updates the
 // current context based on a provided namespace.
 func (o *ViewWebhookOptions) Run() error {
-	printer := printer.NewPrinter(o.Out)
+	p := printer.NewPrinter(o.Out)
 
 	// create the ClientSet from restConfig
 	clientSet, err := kubernetes.NewForConfig(o.restConfig)
@@ -126,13 +130,13 @@ func (o *ViewWebhookOptions) Run() error {
 	//validatingWebhookClient := clientset.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations()
 
 	mw := k8s.NewMutatingWebHookClient(clientSet)
-	model, err := mw.Run()
+	model, err := mw.Run(os.Args)
 
 	if err != nil {
 		return err
 	}
 
-	printer.Print(model)
+	p.Print(model)
 
 	return nil
 }
