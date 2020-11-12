@@ -40,28 +40,9 @@ func NewPrinter(out io.Writer) *Printer {
 	}
 }
 
-//modifyOperations returns BulletListItem's for Operations with customizable fields in order to give custom string and styles
-func modifyOperations(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style) {
-	switch strings.ToUpper(str) {
-	case "CREATE":
-		return str, pterm.NewStyle(pterm.FgGreen), "+", pterm.NewStyle(pterm.FgLightGreen)
-	case "UPDATE":
-		return str, pterm.NewStyle(pterm.FgBlue), "^", pterm.NewStyle(pterm.FgLightBlue)
-	case "DELETE":
-		return str, pterm.NewStyle(pterm.FgRed), "-", pterm.NewStyle(pterm.FgLightRed)
-	}
-
-	return str, nil, pterm.DefaultBulletList.Bullet, nil
-}
-
 //modifyNamespaces returns BulletListItem's for Namespaces with customizable fields in order to give custom string and styles
 func modifyNamespaces(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style) {
 	return str, pterm.NewStyle(pterm.FgGreen), pterm.DefaultBulletList.Bullet, pterm.NewStyle(pterm.FgLightWhite)
-}
-
-//modifyResources returns BulletListItem's for ResourceModels with customizable fields in order to give custom string and styles
-func modifyResources(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style) {
-	return str, pterm.NewStyle(pterm.FgWhite), pterm.DefaultBulletList.Bullet, pterm.NewStyle(pterm.FgLightWhite)
 }
 
 type BulletItem struct {
