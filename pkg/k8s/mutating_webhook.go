@@ -87,14 +87,18 @@ func (w *WebHookClient) fillMutatingWebhookConfigurations(mwc v1beta1.MutatingWe
 		var operations, resources, activeNamespaces []string
 		w.fillActiveNamespacesForMutating(webhook, &activeNamespaces)
 
-		item.Webhook = printer.PrintWebhookItem{
-			Name:             webhook.Name,
-			ServiceName:      webhook.ClientConfig.Service.Name,
-			ServiceNamespace: webhook.ClientConfig.Service.Namespace,
-			ServicePath:      webhook.ClientConfig.Service.Path,
-			ServicePort:      webhook.ClientConfig.Service.Port,
+		webhookItem := printer.PrintWebhookItem{
+			Name: webhook.Name,
 		}
 
+		if webhook.ClientConfig.Service != nil {
+			webhookItem.ServiceName = webhook.ClientConfig.Service.Name
+			webhookItem.ServiceNamespace = webhook.ClientConfig.Service.Namespace
+			webhookItem.ServicePath = webhook.ClientConfig.Service.Path
+			webhookItem.ServicePort = webhook.ClientConfig.Service.Port
+		}
+
+		item.Webhook = webhookItem
 		w.fillRulesForMutating(webhook, &operations, &resources)
 
 		item.Operations = operations
