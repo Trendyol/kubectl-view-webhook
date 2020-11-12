@@ -21,6 +21,7 @@ import (
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"os"
+    _ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 func main() {
