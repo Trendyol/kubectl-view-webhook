@@ -109,10 +109,12 @@ func (p *Printer) Print(model *PrintModel) {
 	var data [][]string
 
 	for _, item := range model.Items {
-		operationsData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.Operations, Modify: modifyOperations})).Srender()
-		resourcesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.Resources, Modify: modifyResources})).Srender()
-		namespacesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.ActiveNamespaces,
-			Modify: modifyNamespaces})).Srender()
+		operationsData, _ := pterm.DefaultBulletList.WithItems(
+			convertStringArrayToBulletListItem(BulletItem{Items: item.Operations, Modify: modifyOperations})).Srender()
+		resourcesData, _ := pterm.DefaultBulletList.WithItems(
+			convertStringArrayToBulletListItem(BulletItem{Items: item.Resources, Modify: modifyResources})).Srender()
+		namespacesData, _ := pterm.DefaultBulletList.WithItems(
+			convertStringArrayToBulletListItem(BulletItem{Items: item.ActiveNamespaces, Modify: modifyNamespaces})).Srender()
 
 		remainingTime := func(t time.Duration) string {
 			days := t.Hours() / 24
@@ -136,14 +138,26 @@ func (p *Printer) Print(model *PrintModel) {
 			}
 		}
 
-		serviceLeveledList := pterm.LeveledList{
-			pterm.LeveledListItem{Level: 0, Text: item.Webhook.ServiceName},
-			pterm.LeveledListItem{Level: 1, Text: "NS  : " + item.Webhook.ServiceNamespace},
-			pterm.LeveledListItem{Level: 1, Text: "Path: " + *item.Webhook.ServicePath},
+		serviceLeveledList := pterm.LeveledList{}
+
+		if item.Webhook.ServiceName != "" {
+			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 0, Text: item.Webhook.ServiceName})
+		}
+
+		if item.Webhook.ServiceNamespace != "" {
+			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: "NS  : " + item.Webhook.ServiceNamespace})
+		}
+
+		if item.Webhook.ServicePath != nil {
+			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: "Path: " + *item.Webhook.ServicePath})
 		}
 
 		if item.Webhook.ServicePort != nil {
 			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: "Port: " + strconv.Itoa(int(*item.Webhook.ServicePort))})
+		}
+
+		if len(serviceLeveledList) == 0 {
+			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 0, Text: pterm.NewStyle(pterm.FgRed).Sprint("✖ No Services")})
 		}
 
 		webhookTreeList := pterm.NewTreeFromLeveledList(serviceLeveledList)
