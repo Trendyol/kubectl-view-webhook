@@ -40,8 +40,8 @@ func NewPrinter(out io.Writer) *Printer {
 	}
 }
 
-//getItemValuesForString returns BulletListItem's customizable fields in order to give custom string and styles
-func getItemValuesForString(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style) {
+//modifyOperations returns BulletListItem's for Operations with customizable fields in order to give custom string and styles
+func modifyOperations(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style) {
 	switch strings.ToUpper(str) {
 	case "CREATE":
 		return str, pterm.NewStyle(pterm.FgGreen), "+", pterm.NewStyle(pterm.FgLightGreen)
@@ -54,18 +54,44 @@ func getItemValuesForString(str string) (text string, textStyle *pterm.Style, bu
 	return str, nil, pterm.DefaultBulletList.Bullet, nil
 }
 
+//modifyNamespaces returns BulletListItem's for Namespaces with customizable fields in order to give custom string and styles
+func modifyNamespaces(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style) {
+	return str, pterm.NewStyle(pterm.FgGreen), pterm.DefaultBulletList.Bullet, pterm.NewStyle(pterm.FgGreen)
+}
+
+type BulletItem struct {
+	Modify func(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style)
+	Items  []string
+}
+
 //convertStringArrayToBulletListItem converts given string array to
 //pterm's BulletListItem array and returns as []pterm.BulletListItem
-func convertStringArrayToBulletListItem(s []string) []pterm.BulletListItem {
+func convertStringArrayToBulletListItem(s BulletItem) []pterm.BulletListItem {
 	var bulletItems []pterm.BulletListItem
-	for _, t := range s {
-		t, tS, b, bS := getItemValuesForString(t)
+
+	if s.Items != nil {
+		for _, t := range s.Items {
+			if s.Modify != nil {
+				t, tS, b, bS := s.Modify(t)
+				bulletItems = append(bulletItems, pterm.BulletListItem{
+					Level:       0,
+					Text:        t,
+					TextStyle:   tS,
+					Bullet:      b,
+					BulletStyle: bS})
+			} else {
+				bulletItems = append(bulletItems, pterm.BulletListItem{
+					Level: 0,
+					Text:  t,
+				})
+			}
+		}
+	} else {
 		bulletItems = append(bulletItems, pterm.BulletListItem{
 			Level:       0,
-			Text:        t,
-			TextStyle:   tS,
-			Bullet:      b,
-			BulletStyle: bS,
+			Text:        "X",
+			TextStyle:   pterm.NewStyle(pterm.FgLightRed),
+			BulletStyle: pterm.NewStyle(pterm.FgLightRed),
 		})
 	}
 	return bulletItems
@@ -77,9 +103,9 @@ func (p *Printer) Print(model *PrintModel) {
 	var data [][]string
 
 	for _, item := range model.Items {
-		operationsData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.Operations)).Srender()
-		resourcesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.Resources)).Srender()
-		namespacesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.ActiveNamespaces)).Srender()
+		operationsData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.Operations, Modify: modifyOperations})).Srender()
+		resourcesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.Resources})).Srender()
+		namespacesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.ActiveNamespaces, Modify: modifyNamespaces})).Srender()
 
 		remainingTime := func(t time.Duration) string {
 			days := t.Hours() / 24
@@ -103,12 +129,17 @@ func (p *Printer) Print(model *PrintModel) {
 			}
 		}
 
-		webhookTreeList := pterm.NewTreeFromLeveledList(pterm.LeveledList{
+		serviceLeveledList := pterm.LeveledList{
 			pterm.LeveledListItem{Level: 0, Text: item.Webhook.ServiceName},
 			pterm.LeveledListItem{Level: 1, Text: "NS  : " + item.Webhook.ServiceNamespace},
 			pterm.LeveledListItem{Level: 1, Text: "Path: " + *item.Webhook.ServicePath},
-			pterm.LeveledListItem{Level: 1, Text: "Port: " + strconv.Itoa(int(*item.Webhook.ServicePort))},
-		})
+		}
+
+		if item.Webhook.ServicePort != nil {
+			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: "Port: " + strconv.Itoa(int(*item.Webhook.ServicePort))})
+		}
+
+		webhookTreeList := pterm.NewTreeFromLeveledList(serviceLeveledList)
 
 		s, _ := pterm.DefaultTree.WithRoot(webhookTreeList).Srender()
 
