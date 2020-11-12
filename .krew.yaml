@@ -22,7 +22,7 @@ spec:
         matchLabels:
           os: linux
           arch: 386
-      {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}linux_386.tar.gz" .TagName }}
+      {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_linux_386.tar.gz" .TagName }}
       bin: kubectl-view-webhook
   shortDescription: Visualize your webhook configurations
   description: |
