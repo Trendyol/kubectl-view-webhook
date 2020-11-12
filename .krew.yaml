@@ -12,7 +12,6 @@ spec:
           operator: In
           values:
             - darwin
-            - linux
     {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_darwin_amd64.tar.gz" .TagName }}
     bin: kubectl-view-webhook
   - selector:
@@ -20,7 +19,6 @@ spec:
         - key: os
           operator: In
           values:
-            - darwin
             - linux
     {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_linux_amd64.tar.gz" .TagName }}
     bin: kubectl-view-webhook
