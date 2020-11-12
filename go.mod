@@ -3,6 +3,7 @@ module github.com/Trendyol/kubectl-view-webhook
 go 1.15
 
 require (
+	github.com/hako/durafmt v0.0.0-20200710122514-c0fb7b4da026
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pterm/pterm v0.12.2
 	github.com/spf13/cobra v1.1.1

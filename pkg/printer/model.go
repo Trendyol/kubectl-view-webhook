@@ -16,6 +16,8 @@ limitations under the License.
 
 package printer
 
+import "time"
+
 type PrintModel struct {
 	Items []PrintItem
 }
@@ -26,7 +28,7 @@ type PrintItem struct {
 	Kind       string
 	Operations []string
 	Resources  []string
-	ValidUntil int64
+	ValidUntil time.Duration
 	ActiveNamespaces []string
 }
 

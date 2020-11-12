@@ -17,12 +17,14 @@ limitations under the License.
 package printer
 
 import (
+	"github.com/hako/durafmt"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pterm/pterm"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Printer formats and prints check results and warnings.
@@ -38,17 +40,39 @@ func NewPrinter(out io.Writer) *Printer {
 	}
 }
 
+//getItemValuesForString returns BulletListItem's customizable fields in order to give custom string and styles
+func getItemValuesForString(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style) {
+	switch strings.ToUpper(str) {
+	case "CREATE":
+		return str, pterm.NewStyle(pterm.FgGreen), "+", pterm.NewStyle(pterm.FgLightGreen)
+	case "UPDATE":
+		return str, pterm.NewStyle(pterm.FgBlue), "^", pterm.NewStyle(pterm.FgLightBlue)
+	case "DELETE":
+		return str, pterm.NewStyle(pterm.FgRed), "-", pterm.NewStyle(pterm.FgLightRed)
+	}
+
+	return str, nil, pterm.DefaultBulletList.Bullet, nil
+}
+
+//convertStringArrayToBulletListItem converts given string array to
+//pterm's BulletListItem array and returns as []pterm.BulletListItem
 func convertStringArrayToBulletListItem(s []string) []pterm.BulletListItem {
 	var bulletItems []pterm.BulletListItem
 	for _, t := range s {
+		t, tS, b, bS := getItemValuesForString(t)
 		bulletItems = append(bulletItems, pterm.BulletListItem{
-			Level: 0,
-			Text:  t,
+			Level:       0,
+			Text:        t,
+			TextStyle:   tS,
+			Bullet:      b,
+			BulletStyle: bS,
 		})
 	}
 	return bulletItems
 }
 
+//Print reads given PrintModel and prints as
+//table using tablewriter.
 func (p *Printer) Print(model *PrintModel) {
 	var data [][]string
 
@@ -57,13 +81,26 @@ func (p *Printer) Print(model *PrintModel) {
 		resourcesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.Resources)).Srender()
 		namespacesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(item.ActiveNamespaces)).Srender()
 
-		var valid string
-		if item.ValidUntil < 4000 {
-			valid = pterm.Red(strconv.FormatInt(item.ValidUntil, 10) + "d")
-		} else if item.ValidUntil < 60000 {
-			valid = pterm.Yellow(strconv.FormatInt(item.ValidUntil, 10) + "d")
-		} else {
-			valid = pterm.Green(strconv.FormatInt(item.ValidUntil, 10) + "d")
+		remainingTime := func(t time.Duration) string {
+			days := t.Hours() / 24
+
+			N := func() int {
+				if days < 2 {
+					return 2
+				} else {
+					return 1
+				}
+			}
+
+			str := durafmt.Parse(t).LimitFirstN(N()).String()
+
+			if days < 4000 {
+				return pterm.Red(str)
+			} else if days < 60000 {
+				return pterm.Yellow(str)
+			} else {
+				return pterm.Green(str)
+			}
 		}
 
 		webhookTreeList := pterm.NewTreeFromLeveledList(pterm.LeveledList{
@@ -75,7 +112,7 @@ func (p *Printer) Print(model *PrintModel) {
 
 		s, _ := pterm.DefaultTree.WithRoot(webhookTreeList).Srender()
 
-		data = append(data, []string{item.Kind, item.Name, item.Webhook.Name, strings.TrimSuffix(s, "\n"), resourcesData, operationsData, valid, namespacesData})
+		data = append(data, []string{item.Kind, item.Name, item.Webhook.Name, strings.TrimSuffix(s, "\n"), resourcesData, operationsData, remainingTime(item.ValidUntil), namespacesData})
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
@@ -84,14 +121,12 @@ func (p *Printer) Print(model *PrintModel) {
 	table.SetAutoMergeCells(true)
 	table.SetHeaderLine(true)
 	table.SetBorder(true)
-
 	//table.SetReflowDuringAutoWrap(true)
 	table.SetAutoWrapText(false)
 	table.SetAutoFormatHeaders(true)
 	//table.SetCenterSeparator("")
 	//table.SetColumnSeparator("")
 	//table.SetRowSeparator("")
-
 	//table.SetTablePadding(" ")
 	//table.SetNoWhiteSpace(true)
 	table.AppendBulk(data)

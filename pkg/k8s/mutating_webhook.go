@@ -123,11 +123,13 @@ func (w *MutatingWebHookClient) fillPrintItems(mwc v1beta1.MutatingWebhookConfig
 	return items
 }
 
-func retrieveValidDateCount(certificate []byte) int64 {
+//retrieveValidDateCount returns remaining time of the given
+//webhook's CABundle certificate.
+func retrieveValidDateCount(certificate []byte) time.Duration {
 	block, _ := pem.Decode(certificate)
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		log.Fatalf("x509.ParseCertificate - error occurred, detail: %v", err)
 	}
-	return int64(cert.NotAfter.Sub(time.Now()).Hours() / 24)
+	return cert.NotAfter.Sub(time.Now())
 }
