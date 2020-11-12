@@ -53,15 +53,9 @@ func (w *WebHookClient) Run(args []string) (*printer.PrintModel, error) {
 	var items []printer.PrintItem
 
 	if len(args) == 1 {
-		mutatingWebhookConfigurationList, err := w.wClient.List(w.context, metaV1.ListOptions{})
-		if err != nil {
-			return nil, err
-		}
+		mutatingWebhookConfigurationList, _ := w.wClient.List(w.context, metaV1.ListOptions{})
 
-		validatingWebhookConfigurationList, err := w.vClient.List(w.context, metaV1.ListOptions{})
-		if err != nil {
-			return nil, err
-		}
+		validatingWebhookConfigurationList, _ := w.vClient.List(w.context, metaV1.ListOptions{})
 
 		for _, mwc := range mutatingWebhookConfigurationList.Items {
 			w.fillMutatingWebhookConfigurations(mwc, &items)
@@ -70,15 +64,9 @@ func (w *WebHookClient) Run(args []string) (*printer.PrintModel, error) {
 			w.fillValidatingWebhookConfigurations(mwc, &items)
 		}
 	} else {
-		mutatingWebhookConfiguration, err := w.wClient.Get(w.context, args[1], metaV1.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
+		mutatingWebhookConfiguration, _ := w.wClient.Get(w.context, args[1], metaV1.GetOptions{})
 
-		validatingWebhookConfiguration, err := w.vClient.Get(w.context, args[1], metaV1.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
+		validatingWebhookConfiguration, _ := w.vClient.Get(w.context, args[1], metaV1.GetOptions{})
 
 		w.fillMutatingWebhookConfigurations(*mutatingWebhookConfiguration, &items)
 		w.fillValidatingWebhookConfigurations(*validatingWebhookConfiguration, &items)
@@ -150,9 +138,7 @@ func (w *WebHookClient) fillRulesForMutating(webhook v1beta1.MutatingWebhook, op
 			*operations = append(*operations, string(op))
 		}
 
-		for _, r := range rule.Resources {
-			*resources = append(*resources, r)
-		}
+		*resources = append(*resources, rule.Resources...)
 	}
 }
 func (w *WebHookClient) fillRulesForValidating(webhook v1beta1.ValidatingWebhook, operations *[]string, resources *[]string) {
@@ -162,9 +148,7 @@ func (w *WebHookClient) fillRulesForValidating(webhook v1beta1.ValidatingWebhook
 			*operations = append(*operations, string(op))
 		}
 
-		for _, r := range rule.Resources {
-			*resources = append(*resources, r)
-		}
+		*resources = append(*resources, rule.Resources...)
 	}
 }
 func (w *WebHookClient) fillActiveNamespacesForMutating(webhook v1beta1.MutatingWebhook, activeNamespaces *[]string) {
@@ -214,5 +198,5 @@ func retrieveValidDateCount(certificate []byte) time.Duration {
 	if err != nil {
 		log.Fatalf("x509.ParseCertificate - error occurred, detail: %v", err)
 	}
-	return cert.NotAfter.Sub(time.Now())
+	return time.Until(cert.NotAfter)
 }
