@@ -10,19 +10,19 @@ spec:
         matchLabels:
           os: darwin
           arch: amd64
-      {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-evict-pod_{{ .TagName }}_darwin_amd64.tar.gz" .TagName }}
+      {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_darwin_amd64.tar.gz" .TagName }}
       bin: kubectl-view-webhook
     - selector:
         matchLabels:
           os: linux
           arch: amd64
-      {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-evict-pod_{{ .TagName }}_linux_amd64.tar.gz" .TagName }}
+      {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_linux_amd64.tar.gz" .TagName }}
       bin: kubectl-view-webhook
     - selector:
         matchLabels:
           os: linux
           arch: 386
-      {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-evict-pod_{{ .TagName }}linux_386.tar.gz" .TagName }}
+      {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}linux_386.tar.gz" .TagName }}
       bin: kubectl-view-webhook
   shortDescription: Visualize your webhook configurations
   description: |
