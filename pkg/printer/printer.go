@@ -56,7 +56,12 @@ func modifyOperations(str string) (text string, textStyle *pterm.Style, bullet s
 
 //modifyNamespaces returns BulletListItem's for Namespaces with customizable fields in order to give custom string and styles
 func modifyNamespaces(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style) {
-	return str, pterm.NewStyle(pterm.FgGreen), pterm.DefaultBulletList.Bullet, pterm.NewStyle(pterm.FgGreen)
+	return str, pterm.NewStyle(pterm.FgGreen), pterm.DefaultBulletList.Bullet, pterm.NewStyle(pterm.FgLightWhite)
+}
+
+//modifyResources returns BulletListItem's for Resources with customizable fields in order to give custom string and styles
+func modifyResources(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style) {
+	return str, pterm.NewStyle(pterm.FgWhite), pterm.DefaultBulletList.Bullet, pterm.NewStyle(pterm.FgLightWhite)
 }
 
 type BulletItem struct {
@@ -89,8 +94,9 @@ func convertStringArrayToBulletListItem(s BulletItem) []pterm.BulletListItem {
 	} else {
 		bulletItems = append(bulletItems, pterm.BulletListItem{
 			Level:       0,
-			Text:        "X",
-			TextStyle:   pterm.NewStyle(pterm.FgLightRed),
+			Text:        "No Active Namespaces",
+			Bullet:      "✖",
+			TextStyle:   pterm.NewStyle(pterm.FgRed),
 			BulletStyle: pterm.NewStyle(pterm.FgLightRed),
 		})
 	}
@@ -104,8 +110,9 @@ func (p *Printer) Print(model *PrintModel) {
 
 	for _, item := range model.Items {
 		operationsData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.Operations, Modify: modifyOperations})).Srender()
-		resourcesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.Resources})).Srender()
-		namespacesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.ActiveNamespaces, Modify: modifyNamespaces})).Srender()
+		resourcesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.Resources, Modify: modifyResources})).Srender()
+		namespacesData, _ := pterm.DefaultBulletList.WithItems(convertStringArrayToBulletListItem(BulletItem{Items: item.ActiveNamespaces,
+			Modify: modifyNamespaces})).Srender()
 
 		remainingTime := func(t time.Duration) string {
 			days := t.Hours() / 24

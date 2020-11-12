@@ -37,9 +37,9 @@ type WebHookClient struct {
 	context context.Context
 }
 
-// NewMutatingWebHookClient constructs a new WebHookClient with the specified output
+// NewWebHookClient constructs a new WebHookClient with the specified output
 // of *kubernetes.Clientset
-func NewMutatingWebHookClient(client *kubernetes.Clientset) *WebHookClient {
+func NewWebHookClient(client *kubernetes.Clientset) *WebHookClient {
 	return &WebHookClient{
 		wClient: client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations(),
 		vClient: client.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations(),
@@ -48,6 +48,7 @@ func NewMutatingWebHookClient(client *kubernetes.Clientset) *WebHookClient {
 	}
 }
 
+// Run
 func (w *WebHookClient) Run(args []string) (*printer.PrintModel, error) {
 	var items []printer.PrintItem
 

@@ -129,7 +129,7 @@ func (o *ViewWebhookOptions) Run() error {
 
 	//validatingWebhookClient := clientset.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations()
 
-	mw := k8s.NewMutatingWebHookClient(clientSet)
+	mw := k8s.NewWebHookClient(clientSet)
 	model, err := mw.Run(os.Args)
 
 	if err != nil {
