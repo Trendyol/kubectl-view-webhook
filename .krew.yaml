@@ -18,12 +18,6 @@ spec:
           arch: amd64
       {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_linux_amd64.tar.gz" .TagName }}
       bin: kubectl-view-webhook
-    - selector:
-        matchLabels:
-          os: linux
-          arch: 386
-      {{addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_linux_386.tar.gz" .TagName }}
-      bin: kubectl-view-webhook
   shortDescription: Visualize your webhook configurations
   description: |
     Visualize critical parts of the admission webhook configuration resource
