@@ -29,6 +29,7 @@ $ kubectl view-webhook NAME [flags]
 
 This repository is available under the [Apache License 2.0](https://github.com/Trendyol/kubectl-view-webhook/blob/master/LICENSE).
 
+![goreleaser](https://github.com/Trendyol/kubectl-view-webhook/workflows/goreleaser/badge.svg) 
 [report-card-img]: https://goreportcard.com/badge/github.com/Trendyol/kubectl-view-webhook?style=flat-square
 [report-card]: https://goreportcard.com/report/github.com/Trendyol/kubectl-view-webhook
 
