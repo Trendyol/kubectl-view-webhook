@@ -22,13 +22,17 @@ type PrintModel struct {
 	Items []PrintItem
 }
 
-type PrintItem struct {
-	Name       string
-	Webhook    PrintWebhookItem
-	Kind       string
+type ResourceModel struct {
 	Operations []string
-	Resources  []string
-	ValidUntil time.Duration
+	Resources []string
+}
+
+type PrintItem struct {
+	Name             string
+	Webhook          PrintWebhookItem
+	Kind             string
+	ResourceModels   []ResourceModel
+	ValidUntil       time.Duration
 	ActiveNamespaces []string
 }
 

@@ -59,7 +59,7 @@ func modifyNamespaces(str string) (text string, textStyle *pterm.Style, bullet s
 	return str, pterm.NewStyle(pterm.FgGreen), pterm.DefaultBulletList.Bullet, pterm.NewStyle(pterm.FgLightWhite)
 }
 
-//modifyResources returns BulletListItem's for Resources with customizable fields in order to give custom string and styles
+//modifyResources returns BulletListItem's for ResourceModels with customizable fields in order to give custom string and styles
 func modifyResources(str string) (text string, textStyle *pterm.Style, bullet string, bulletStyle *pterm.Style) {
 	return str, pterm.NewStyle(pterm.FgWhite), pterm.DefaultBulletList.Bullet, pterm.NewStyle(pterm.FgLightWhite)
 }
@@ -109,12 +109,26 @@ func (p *Printer) Print(model *PrintModel) {
 	var data [][]string
 
 	for _, item := range model.Items {
-		operationsData, _ := pterm.DefaultBulletList.WithItems(
-			convertStringArrayToBulletListItem(BulletItem{Items: item.Operations, Modify: modifyOperations})).Srender()
-		resourcesData, _ := pterm.DefaultBulletList.WithItems(
-			convertStringArrayToBulletListItem(BulletItem{Items: item.Resources, Modify: modifyResources})).Srender()
 		namespacesData, _ := pterm.DefaultBulletList.WithItems(
 			convertStringArrayToBulletListItem(BulletItem{Items: item.ActiveNamespaces, Modify: modifyNamespaces})).Srender()
+
+		resourcesLeveledList := pterm.LeveledList{}
+		for _, rm := range item.ResourceModels {
+			for _, rs := range rm.Resources {
+				resourcesLeveledList = append(resourcesLeveledList, pterm.LeveledListItem{Level: 0, Text: pterm.NewStyle(pterm.FgWhite).Sprint(rs)})
+			}
+			for _, op := range rm.Operations {
+				switch strings.ToUpper(op) {
+				case "CREATE":
+					op = pterm.NewStyle(pterm.FgGreen).Sprint("+", op)
+				case "UPDATE":
+					op = pterm.NewStyle(pterm.FgBlue).Sprint("^", op)
+				case "DELETE":
+					op = pterm.NewStyle(pterm.FgRed).Sprint("-", op)
+				}
+				resourcesLeveledList = append(resourcesLeveledList, pterm.LeveledListItem{Level: 1, Text: op})
+			}
+		}
 
 		remainingTime := func(t time.Duration) string {
 			days := t.Hours() / 24
@@ -161,14 +175,16 @@ func (p *Printer) Print(model *PrintModel) {
 		}
 
 		webhookTreeList := pterm.NewTreeFromLeveledList(serviceLeveledList)
+		resourcesTreeList := pterm.NewTreeFromLeveledList(resourcesLeveledList)
 
-		s, _ := pterm.DefaultTree.WithRoot(webhookTreeList).Srender()
+		wt, _ := pterm.DefaultTree.WithRoot(webhookTreeList).Srender()
+		rt, _ := pterm.DefaultTree.WithRoot(resourcesTreeList).Srender()
 
-		data = append(data, []string{item.Kind, item.Name, item.Webhook.Name, strings.TrimSuffix(s, "\n"), resourcesData, operationsData, remainingTime(item.ValidUntil), namespacesData})
+		data = append(data, []string{item.Kind, item.Name, item.Webhook.Name, strings.TrimSuffix(wt, "\n"), strings.TrimSuffix(rt, "\n"), remainingTime(item.ValidUntil), namespacesData})
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Kind", "Name", "Webhook", "Service", "Resources", "Operations", "Remaining Day", "Active NS"})
+	table.SetHeader([]string{"Kind", "Name", "Webhook", "Service", "Resources&Operations", "Remaining Day", "Active NS"})
 	table.SetRowLine(true)
 	table.SetAutoMergeCells(true)
 	table.SetHeaderLine(true)

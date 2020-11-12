@@ -48,6 +48,11 @@ func NewWebHookClient(client *kubernetes.Clientset) *WebHookClient {
 	}
 }
 
+type Resource struct {
+	Name       string
+	Operations []string
+}
+
 // Run
 func (w *WebHookClient) Run(args []string) (*printer.PrintModel, error) {
 	var items []printer.PrintItem
@@ -84,7 +89,7 @@ func (w *WebHookClient) fillMutatingWebhookConfigurations(mwc v1beta1.MutatingWe
 	}
 
 	for _, webhook := range mwc.Webhooks {
-		var operations, resources, activeNamespaces []string
+		var activeNamespaces []string
 		w.fillActiveNamespacesForMutating(webhook, &activeNamespaces)
 
 		webhookItem := printer.PrintWebhookItem{
@@ -99,10 +104,9 @@ func (w *WebHookClient) fillMutatingWebhookConfigurations(mwc v1beta1.MutatingWe
 		}
 
 		item.Webhook = webhookItem
-		w.fillRulesForMutating(webhook, &operations, &resources)
+		resources := w.fillRulesForMutating(webhook)
 
-		item.Operations = operations
-		item.Resources = resources
+		item.ResourceModels = resources
 		item.ValidUntil = retrieveValidDateCount(webhook.ClientConfig.CABundle)
 		item.ActiveNamespaces = activeNamespaces
 		*items = append(*items, item)
@@ -115,7 +119,7 @@ func (w *WebHookClient) fillValidatingWebhookConfigurations(mwc v1beta1.Validati
 	}
 
 	for _, webhook := range mwc.Webhooks {
-		var operations, resources, activeNamespaces []string
+		var activeNamespaces []string
 		w.fillActiveNamespacesForValidating(webhook, &activeNamespaces)
 
 		webhookItem := printer.PrintWebhookItem{
@@ -129,34 +133,50 @@ func (w *WebHookClient) fillValidatingWebhookConfigurations(mwc v1beta1.Validati
 			webhookItem.ServicePort = webhook.ClientConfig.Service.Port
 		}
 
-		w.fillRulesForValidating(webhook, &operations, &resources)
+		resources := w.fillRulesForValidating(webhook)
 
-		item.Operations = operations
-		item.Resources = resources
+		item.ResourceModels = resources
 		item.ValidUntil = retrieveValidDateCount(webhook.ClientConfig.CABundle)
 		item.ActiveNamespaces = activeNamespaces
 		*items = append(*items, item)
 	}
 }
-func (w *WebHookClient) fillRulesForMutating(webhook v1beta1.MutatingWebhook, operations *[]string, resources *[]string) {
+func (w *WebHookClient) fillRulesForMutating(webhook v1beta1.MutatingWebhook) []printer.ResourceModel {
+	var resources []printer.ResourceModel
+
 	for _, rule := range webhook.Rules {
+		var ops, rs []string
 
 		for _, op := range rule.Operations {
-			*operations = append(*operations, string(op))
+			ops = append(ops, string(op))
 		}
 
-		*resources = append(*resources, rule.Resources...)
+		rs = append(rs, rule.Resources...)
+
+		resources = append(resources, printer.ResourceModel{
+			Operations: ops,
+			Resources:  rs,
+		})
 	}
+	return resources
 }
-func (w *WebHookClient) fillRulesForValidating(webhook v1beta1.ValidatingWebhook, operations *[]string, resources *[]string) {
+func (w *WebHookClient) fillRulesForValidating(webhook v1beta1.ValidatingWebhook) []printer.ResourceModel {
+	var resources []printer.ResourceModel
+	var ops, rs []string
 	for _, rule := range webhook.Rules {
 
 		for _, op := range rule.Operations {
-			*operations = append(*operations, string(op))
+			ops = append(rs, string(op))
 		}
 
-		*resources = append(*resources, rule.Resources...)
+		rs = append(rs, rule.Resources...)
+
+		resources = append(resources, printer.ResourceModel{
+			Operations: ops,
+			Resources:  rs,
+		})
 	}
+	return resources
 }
 func (w *WebHookClient) fillActiveNamespacesForMutating(webhook v1beta1.MutatingWebhook, activeNamespaces *[]string) {
 	if webhook.NamespaceSelector != nil {

@@ -1,0 +1,49 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    meta.helm.sh/release-name: injector-webhook
+    meta.helm.sh/release-namespace: platform
+  creationTimestamp: "2020-07-16T09:19:11Z"
+  generation: 3
+  labels:
+    app.kubernetes.io/instance: injector-webhook
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: injector-chart
+    app.kubernetes.io/version: latest
+    helm.sh/chart: injector-chart-0.0.20
+    release: injector-webhook
+  name: config-sidecar-injector
+  resourceVersion: "402322915"
+  selfLink: /apis/admissionregistration.k8s.io/v1beta1/mutatingwebhookconfigurations/config-sidecar-injector
+  uid: 689f4691-c745-11ea-a62b-0050568af7df
+webhooks:
+- clientConfig:
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMwakNDQWJvQ0NRRGVtallORWNjSWZqQU5CZ2txaGtpRzl3MEJBUXNGQURBcU1TZ3dKZ1lEVlFRRERCOWoKYjI1bWFXY3RjMmxrWldOaGNpMXBibXBsWTNSdmNpMXpaWEoyYVdObE1DQVhEVEl3TURRd05URTBNVFV3TjFvWQpEekl5T1RRd01URTVNVFF4TlRBM1dqQXFNU2d3SmdZRFZRUUREQjlqYjI1bWFXY3RjMmxrWldOaGNpMXBibXBsClkzUnZjaTF6WlhKMmFXTmxNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQStXUzIKNHlRTGxtL0MwYUlqMXZqUldNZTY4QytabkJYekRyVkZDdVkvVm50TndWbVJOUityM1lQdFozZEtsM2tKb1VCSApHcUhsMklhajN6eHlnOHBQL042UzAzN0ErLy8xN3AwRE5hM1FtTVc0c2F0K2JTdWpERER6ZXBMcUx4WDVvYlJrClVLRDlQR3NpV3EzUkw3RUMrWGExYjM5MEZ5VjZhaHZPaStMZXNCUnlpZlZGaTlvc3Qvc055MG9yWEo0R3l3TE4KRmloNzZ0Mm9TdWpycUwrVk5UYVJsZWdxNkVIeEhvNHZQbmxiWWg3dUp4ZTRFZmQ0ZzF5SXVzdHNNVUFRam9EcwpwckY0MFhxenh0enNKVDVUS2ppc1FhWEFWT2V3SFM3OEtUNTlXeEttWFNzREgvcm9idDBpYzB4TVR3M2JjUjkyCnE0ZXYvYzd3YUR6dzVuNXF1UUlEQVFBQk1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQkF0bm5nWEZBdXlLck8KVGVJbnBiK3J6bmMvMThmMGwxb3R2L1RJS01MT25UUUNBVEFtaEZmQ1lxV2NTS3J1YWdveE1nc24zYldHRzhtVQpiWlhPeVpXaDJkMU4rckxDbWV5cytqZzdpVy9hNDZSZ2pXbFpHdE0vYldQNmwzSDdEM1pobkhqbTJ1bExseFBDCnlDWkkvbVdBMVU5NmxPY0Z5Uk9zbldvdVRFNk9KZjY3Rm9UUWljSDJHbDAwc2hRMkRhZDBNWXBYQURUbHhwOHUKSVEzOFA4Z0ROaGdHclN1UUlGNFMrM3FrcUZCTUNjNlJEZm1TUmJCcHFGVklDZVdidDFic2h1bXNiN2F1bXh4cApGdHVXVmh0Sm1BUUVBMzNEdXJZeFgvdWQ4a05tV0hoWEVKdjZuUTJJYTJHYWFBamlkb1BQZ3g3NHFLbjAzWVNTCnhZeFIxRGpTCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    service:
+      name: config-sidecar-injector-service
+      namespace: platform
+      path: /mutate
+  failurePolicy: Fail
+  name: config-sidecar-injector-service.platform.svc
+  namespaceSelector:
+    matchLabels:
+      config.trendyol.com/injection: enabled
+  rules:
+  - apiGroups:
+    - "apps"
+    apiVersions:
+    - "v1beta1"
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - deployments
+  - apiGroups:
+    - "apps"
+    apiVersions:
+    - "v1"
+    operations:
+    - DELETE
+    resources:
+    - deployments
