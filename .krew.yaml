@@ -13,17 +13,17 @@ spec:
         matchLabels:
           os: darwin
           arch: amd64
-      bin: kubectl-view-webhook
       {{ addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_darwin_amd64.tar.gz" .TagName | indent 6}}
+      bin: kubectl-view-webhook
     - selector:
         matchLabels:
           os: linux
           arch: amd64
-      bin: kubectl-view-webhook
       {{ addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_linux_amd64.tar.gz" .TagName | indent 6}}
+      bin: kubectl-view-webhook
     - selector:
         matchLabels:
           os: linux
           arch: 386
-      bin: kubectl-view-webhook
       {{ addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_linux_386.tar.gz" .TagName | indent 6}}
+      bin: kubectl-view-webhook
