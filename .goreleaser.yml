@@ -9,6 +9,7 @@ builds:
       - linux
     goarch:
       - amd64
+      - 386
 
 archives:
   - builds:
