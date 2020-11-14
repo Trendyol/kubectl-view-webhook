@@ -29,7 +29,7 @@ $ cd kubectl-view-webhook
 $ go build .
 ```
 
-### Via krew (Not available yet)
+### Via krew 
 Krew is a kubectl plugin manager. If you have not yet installed krew, get it at [kubernetes-sigs/krew](https://github.com/kubernetes-sigs/krew). Then installation is as simple as :
 
 ```bash
