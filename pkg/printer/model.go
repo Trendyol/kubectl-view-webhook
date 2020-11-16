@@ -24,7 +24,7 @@ type PrintModel struct {
 
 type ResourceModel struct {
 	Operations []string
-	Resources []string
+	Resources  []string
 }
 
 type PrintItem struct {
@@ -37,9 +37,22 @@ type PrintItem struct {
 }
 
 type PrintWebhookItem struct {
-	Name             string
-	ServiceName      string
-	ServiceNamespace string
-	ServicePath      *string
-	ServicePort      *int32
+	Name    string
+	Service PrintServiceItem
+}
+
+type PrintServiceItem struct {
+	Found     bool
+	Name      string
+	Namespace string
+	Path      *string
+	Ports     []PrintServicePortItem
+	ClusterIP string
+	Type      string
+}
+
+type PrintServicePortItem struct {
+	Port       int32
+	TargetPort int32
+	Protocol   string
 }
