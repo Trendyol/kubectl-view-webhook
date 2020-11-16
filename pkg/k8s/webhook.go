@@ -31,6 +31,7 @@ import (
 )
 
 type WebHookClient struct {
+	client  *kubernetes.Clientset
 	wClient typedV1beta1.MutatingWebhookConfigurationInterface
 	vClient typedV1beta1.ValidatingWebhookConfigurationInterface
 	nClient typedCoreV1.NamespaceInterface
@@ -41,6 +42,7 @@ type WebHookClient struct {
 // of *kubernetes.Clientset
 func NewWebHookClient(client *kubernetes.Clientset) *WebHookClient {
 	return &WebHookClient{
+		client:  client,
 		wClient: client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations(),
 		vClient: client.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations(),
 		nClient: client.CoreV1().Namespaces(),
@@ -54,10 +56,12 @@ type Resource struct {
 }
 
 // Run
+//args[0]: self executable
+//args[1]: may be 'webhookname' or '--kubeconfig'
 func (w *WebHookClient) Run(args []string) (*printer.PrintModel, error) {
 	var items []printer.PrintItem
 
-	if len(args) == 1 {
+	if len(args) == 0 {
 		mutatingWebhookConfigurationList, _ := w.wClient.List(w.context, metaV1.ListOptions{})
 
 		validatingWebhookConfigurationList, _ := w.vClient.List(w.context, metaV1.ListOptions{})
@@ -69,9 +73,9 @@ func (w *WebHookClient) Run(args []string) (*printer.PrintModel, error) {
 			w.fillValidatingWebhookConfigurations(mwc, &items)
 		}
 	} else {
-		mutatingWebhookConfiguration, _ := w.wClient.Get(w.context, args[1], metaV1.GetOptions{})
+		mutatingWebhookConfiguration, _ := w.wClient.Get(w.context, args[0], metaV1.GetOptions{})
 
-		validatingWebhookConfiguration, _ := w.vClient.Get(w.context, args[1], metaV1.GetOptions{})
+		validatingWebhookConfiguration, _ := w.vClient.Get(w.context, args[0], metaV1.GetOptions{})
 
 		w.fillMutatingWebhookConfigurations(*mutatingWebhookConfiguration, &items)
 		w.fillValidatingWebhookConfigurations(*validatingWebhookConfiguration, &items)
@@ -97,10 +101,8 @@ func (w *WebHookClient) fillMutatingWebhookConfigurations(mwc v1beta1.MutatingWe
 		}
 
 		if webhook.ClientConfig.Service != nil {
-			webhookItem.ServiceName = webhook.ClientConfig.Service.Name
-			webhookItem.ServiceNamespace = webhook.ClientConfig.Service.Namespace
-			webhookItem.ServicePath = webhook.ClientConfig.Service.Path
-			webhookItem.ServicePort = webhook.ClientConfig.Service.Port
+			ss := w.GenerateServiceItem(webhook.ClientConfig.Service.Namespace, webhook.ClientConfig.Service.Name, webhook.ClientConfig.Service.Path, webhook.ClientConfig.Service.Port)
+			webhookItem.Service = ss
 		}
 
 		item.Webhook = webhookItem
@@ -127,10 +129,8 @@ func (w *WebHookClient) fillValidatingWebhookConfigurations(mwc v1beta1.Validati
 		}
 
 		if webhook.ClientConfig.Service != nil {
-			webhookItem.ServiceName = webhook.ClientConfig.Service.Name
-			webhookItem.ServiceNamespace = webhook.ClientConfig.Service.Namespace
-			webhookItem.ServicePath = webhook.ClientConfig.Service.Path
-			webhookItem.ServicePort = webhook.ClientConfig.Service.Port
+			ss := w.GenerateServiceItem(webhook.ClientConfig.Service.Namespace, webhook.ClientConfig.Service.Name, webhook.ClientConfig.Service.Path, webhook.ClientConfig.Service.Port)
+			webhookItem.Service = ss
 		}
 
 		item.Webhook = webhookItem
@@ -216,6 +216,38 @@ func (w *WebHookClient) fillActiveNamespacesForValidating(webhook v1beta1.Valida
 			}
 		}
 	}
+}
+
+func (w *WebHookClient) GenerateServiceItem(ns, name string, path *string, port *int32) printer.PrintServiceItem {
+	service := w.client.CoreV1().Services(ns)
+
+	ss, err := service.Get(w.context, name, metaV1.GetOptions{})
+
+	result := printer.PrintServiceItem{
+		Name:      name,
+		Namespace: ns,
+		Path:      path,
+		Ports:     nil,
+	}
+
+	if err != nil {
+		result.Found = false
+		return result
+	}
+
+	for _, p := range ss.Spec.Ports {
+		result.Ports = append(result.Ports, printer.PrintServicePortItem{
+			Port:       p.Port,
+			TargetPort: p.TargetPort.IntVal,
+			Protocol:   string(p.Protocol),
+		})
+	}
+
+	result.Found = true
+	result.ClusterIP = ss.Spec.ClusterIP
+	result.Type = string(ss.Spec.Type)
+
+	return result
 }
 
 //retrieveValidDateCount returns remaining time of the given

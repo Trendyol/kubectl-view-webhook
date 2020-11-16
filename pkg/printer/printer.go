@@ -17,12 +17,12 @@ limitations under the License.
 package printer
 
 import (
+	"fmt"
 	"github.com/hako/durafmt"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pterm/pterm"
 	"io"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -135,20 +135,29 @@ func (p *Printer) Print(model *PrintModel) {
 
 		serviceLeveledList := pterm.LeveledList{}
 
-		if item.Webhook.ServiceName != "" {
-			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 0, Text: item.Webhook.ServiceName})
-		}
+		service := item.Webhook.Service
 
-		if item.Webhook.ServiceNamespace != "" {
-			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: "NS  : " + item.Webhook.ServiceNamespace})
-		}
-
-		if item.Webhook.ServicePath != nil {
-			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: "Path: " + *item.Webhook.ServicePath})
-		}
-
-		if item.Webhook.ServicePort != nil {
-			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: "Port: " + strconv.Itoa(int(*item.Webhook.ServicePort))})
+		if service.Found {
+			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 0, Text: service.Name})
+			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: "NS  : " + service.Namespace})
+			if service.Path != nil {
+				serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: "Path: " + *service.Path})
+			}
+			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: fmt.Sprintf("IP  : %s (%s)", service.ClusterIP, service.Type)})
+			if service.Ports != nil {
+				for _, p := range service.Ports {
+					getPortInfo := func() string {
+						if p.TargetPort == 0 {
+							return fmt.Sprintf("%d/%s", p.Port, p.Protocol)
+						}
+						return fmt.Sprintf("%d::%d/%s", p.Port, p.TargetPort, p.Protocol)
+					}
+					serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 2, Text: getPortInfo()})
+				}
+			}
+		} else {
+			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 0, Text: pterm.NewStyle(pterm.FgRed).Sprintf("✖ %s", service.Name)})
+			serviceLeveledList = append(serviceLeveledList, pterm.LeveledListItem{Level: 1, Text: "NS  : " + service.Namespace})
 		}
 
 		if len(serviceLeveledList) == 0 {
