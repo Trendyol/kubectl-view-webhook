@@ -50,7 +50,7 @@ func NewViewWebhookOptions(streams genericclioptions.IOStreams) *ViewWebhookOpti
 }
 
 // NewCmdViewWebhook provides a cobra command wrapping NamespaceOptions
-func NewCmdViewWebhook(streams genericclioptions.IOStreams) *cobra.Command {
+func NewCmdViewWebhook(streams genericclioptions.IOStreams, version, commit, date string) *cobra.Command {
 	o := NewViewWebhookOptions(streams)
 
 	cmd := &cobra.Command{
@@ -73,6 +73,12 @@ func NewCmdViewWebhook(streams genericclioptions.IOStreams) *cobra.Command {
 
 			return nil
 		},
+		Version: func(version, commit, date string) string {
+			return fmt.Sprintf(`
+Version: %s
+Commit: %s
+Date: %s`, version, commit, date)
+		}(version, commit, date),
 	}
 
 	o.configFlags.AddFlags(cmd.Flags())
