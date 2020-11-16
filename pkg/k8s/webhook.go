@@ -133,6 +133,7 @@ func (w *WebHookClient) fillValidatingWebhookConfigurations(mwc v1beta1.Validati
 			webhookItem.ServicePort = webhook.ClientConfig.Service.Port
 		}
 
+		item.Webhook = webhookItem
 		resources := w.fillRulesForValidating(webhook)
 
 		item.ResourceModels = resources
