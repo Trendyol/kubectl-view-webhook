@@ -11,6 +11,18 @@ Visualize your webhook configurations in Kubernetes.
 
 [![asciicast](https://asciinema.org/a/373223.svg)](https://asciinema.org/a/373223)
 
+Table of Contents
+=================
+
+* [kubectl\-view\-webhook](#kubectl-view-webhook)
+  * [Installation](#installation)
+    * [Via Go](#via-go)
+    * [Via source code](#via-source-code)
+    * [Via krew](#via-krew)
+  * [Usage](#usage)
+    * [Table details](#table-details)
+  * [License](#license)
+
 ## Installation
 > Go binaries are automatically built with each release by GoReleaser. These can be accessed on the GitHub [releases page](https://github.com/Trendyol/kubectl-view-webhook/releases) for this project.
 
