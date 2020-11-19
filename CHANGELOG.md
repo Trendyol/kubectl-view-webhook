@@ -1,15 +1,13 @@
 # Changelog
 
+## v0.0.2 (19/11/2020)
+- [**bug**] can not parse cli args [#1](https://github.com/Trendyol/kubectl-view-webhook/issues/1)
+
+---
+
 ## v0.0.23 (16/11/2020)
-
-
-## Changelog
-
-2a6084f feat(service-detail): add new infos and fixes #1 (#2)
-650a9b5 fix: validating webhook setting
-6b58887 Update README.md
-
-
+- [feat(service-detail): add new infos and fixes #1 (#2)](https://github.com/Trendyol/kubectl-view-webhook/commit/2a6084f9a44c705fe08a1546c60713b589888a60) - @Dentrax
+- [fix: validating webhook setting](https://github.com/Trendyol/kubectl-view-webhook/commit/650a9b5bafb6089fe9cf7106758d93267984e794) - @Dentrax
 
 ---
 
