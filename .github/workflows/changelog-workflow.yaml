@@ -1,0 +1,22 @@
+
+name: Changelog workflow
+on:
+  schedule:
+    # Runs every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  Changelog:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 20
+    - uses: notlmn/release-with-changelog@v2
+      with:
+        header: '### Changelog'
+        footer: 'Custom footer'
+        include-hash: true
+        include-range: true
+        token: ${{ secrets.GITHUB_TOKEN }}
