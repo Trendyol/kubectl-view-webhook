@@ -112,6 +112,9 @@ func (p *Printer) Print(model *PrintModel) {
 		}
 
 		remainingTime := func(t time.Duration) string {
+			if t == 0 {
+				return pterm.Red("No CABundle")
+			}
 			days := t.Hours() / 24
 
 			N := func() int {

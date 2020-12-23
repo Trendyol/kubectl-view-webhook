@@ -253,6 +253,9 @@ func (w *WebHookClient) GenerateServiceItem(ns, name string, path *string, port 
 //retrieveValidDateCount returns remaining time of the given
 //webhook's CABundle certificate.
 func retrieveValidDateCount(certificate []byte) time.Duration {
+	if certificate == nil {
+		return 0
+	}
 	block, _ := pem.Decode(certificate)
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
