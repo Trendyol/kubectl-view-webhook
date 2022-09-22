@@ -24,6 +24,18 @@ spec:
     - selector:
         matchLabels:
           os: linux
+          arch: arm64
+      {{ addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_linux_arm64.tar.gz" .TagName | indent 6}}
+      bin: kubectl-view-webhook
+    - selector:
+        matchLabels:
+          os: linux
+          arch: arm
+      {{ addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_linux_arm.tar.gz" .TagName | indent 6}}
+      bin: kubectl-view-webhook
+    - selector:
+        matchLabels:
+          os: linux
           arch: 386
       {{ addURIAndSha "https://github.com/Trendyol/kubectl-view-webhook/releases/download/{{ .TagName }}/kubectl-view-webhook_{{ .TagName }}_linux_386.tar.gz" .TagName | indent 6}}
       bin: kubectl-view-webhook
