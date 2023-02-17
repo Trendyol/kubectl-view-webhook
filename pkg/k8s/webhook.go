@@ -20,20 +20,21 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/Trendyol/kubectl-view-webhook/pkg/printer"
-	"k8s.io/api/admissionregistration/v1beta1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	typedV1beta1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1beta1"
-	typedCoreV1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"log"
 	"time"
+
+	"github.com/Trendyol/kubectl-view-webhook/pkg/printer"
+	v1 "k8s.io/api/admissionregistration/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	typedV1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1"
+	typedCoreV1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 type WebHookClient struct {
 	client  *kubernetes.Clientset
-	wClient typedV1beta1.MutatingWebhookConfigurationInterface
-	vClient typedV1beta1.ValidatingWebhookConfigurationInterface
+	wClient typedV1.MutatingWebhookConfigurationInterface
+	vClient typedV1.ValidatingWebhookConfigurationInterface
 	nClient typedCoreV1.NamespaceInterface
 	context context.Context
 }
@@ -43,8 +44,8 @@ type WebHookClient struct {
 func NewWebHookClient(client *kubernetes.Clientset) *WebHookClient {
 	return &WebHookClient{
 		client:  client,
-		wClient: client.AdmissionregistrationV1beta1().MutatingWebhookConfigurations(),
-		vClient: client.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations(),
+		wClient: client.AdmissionregistrationV1().MutatingWebhookConfigurations(),
+		vClient: client.AdmissionregistrationV1().ValidatingWebhookConfigurations(),
 		nClient: client.CoreV1().Namespaces(),
 		context: context.Background(),
 	}
@@ -56,8 +57,8 @@ type Resource struct {
 }
 
 // Run
-//args[0]: self executable
-//args[1]: may be 'webhookname' or '--kubeconfig'
+// args[0]: self executable
+// args[1]: may be 'webhookname' or '--kubeconfig'
 func (w *WebHookClient) Run(args []string) (*printer.PrintModel, error) {
 	var items []printer.PrintItem
 
@@ -86,7 +87,7 @@ func (w *WebHookClient) Run(args []string) (*printer.PrintModel, error) {
 	}, nil
 }
 
-func (w *WebHookClient) fillMutatingWebhookConfigurations(mwc v1beta1.MutatingWebhookConfiguration, items *[]printer.PrintItem) {
+func (w *WebHookClient) fillMutatingWebhookConfigurations(mwc v1.MutatingWebhookConfiguration, items *[]printer.PrintItem) {
 	item := printer.PrintItem{
 		Kind: "Mutating",
 		Name: mwc.Name, //TODO: typeMeta nil
@@ -114,7 +115,7 @@ func (w *WebHookClient) fillMutatingWebhookConfigurations(mwc v1beta1.MutatingWe
 		*items = append(*items, item)
 	}
 }
-func (w *WebHookClient) fillValidatingWebhookConfigurations(mwc v1beta1.ValidatingWebhookConfiguration, items *[]printer.PrintItem) {
+func (w *WebHookClient) fillValidatingWebhookConfigurations(mwc v1.ValidatingWebhookConfiguration, items *[]printer.PrintItem) {
 	item := printer.PrintItem{
 		Kind: "Validating",
 		Name: mwc.Name, //TODO: typeMeta nil
@@ -142,7 +143,7 @@ func (w *WebHookClient) fillValidatingWebhookConfigurations(mwc v1beta1.Validati
 		*items = append(*items, item)
 	}
 }
-func (w *WebHookClient) fillRulesForMutating(webhook v1beta1.MutatingWebhook) []printer.ResourceModel {
+func (w *WebHookClient) fillRulesForMutating(webhook v1.MutatingWebhook) []printer.ResourceModel {
 	var resources []printer.ResourceModel
 
 	for _, rule := range webhook.Rules {
@@ -161,7 +162,7 @@ func (w *WebHookClient) fillRulesForMutating(webhook v1beta1.MutatingWebhook) []
 	}
 	return resources
 }
-func (w *WebHookClient) fillRulesForValidating(webhook v1beta1.ValidatingWebhook) []printer.ResourceModel {
+func (w *WebHookClient) fillRulesForValidating(webhook v1.ValidatingWebhook) []printer.ResourceModel {
 	var resources []printer.ResourceModel
 	var ops, rs []string
 	for _, rule := range webhook.Rules {
@@ -179,7 +180,7 @@ func (w *WebHookClient) fillRulesForValidating(webhook v1beta1.ValidatingWebhook
 	}
 	return resources
 }
-func (w *WebHookClient) fillActiveNamespacesForMutating(webhook v1beta1.MutatingWebhook, activeNamespaces *[]string) {
+func (w *WebHookClient) fillActiveNamespacesForMutating(webhook v1.MutatingWebhook, activeNamespaces *[]string) {
 	if webhook.NamespaceSelector != nil {
 		ncList, _ := w.nClient.List(w.context, metaV1.ListOptions{})
 
@@ -198,7 +199,7 @@ func (w *WebHookClient) fillActiveNamespacesForMutating(webhook v1beta1.Mutating
 		}
 	}
 }
-func (w *WebHookClient) fillActiveNamespacesForValidating(webhook v1beta1.ValidatingWebhook, activeNamespaces *[]string) {
+func (w *WebHookClient) fillActiveNamespacesForValidating(webhook v1.ValidatingWebhook, activeNamespaces *[]string) {
 	if webhook.NamespaceSelector != nil {
 		ncList, _ := w.nClient.List(w.context, metaV1.ListOptions{})
 
@@ -250,8 +251,8 @@ func (w *WebHookClient) GenerateServiceItem(ns, name string, path *string, port 
 	return result
 }
 
-//retrieveValidDateCount returns remaining time of the given
-//webhook's CABundle certificate.
+// retrieveValidDateCount returns remaining time of the given
+// webhook's CABundle certificate.
 func retrieveValidDateCount(certificate []byte) time.Duration {
 	if certificate == nil {
 		return 0
